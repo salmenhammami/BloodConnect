@@ -1,64 +1,17 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BloodConnect | Sauvez des vies</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
 
-<nav class="navbar navbar-glass p-3">
-    <div class="container d-flex justify-content-between align-items-center">
-        <h4 class="mb-0 fw-bold">
-            <span class="text-danger">🩸</span> BloodConnect
-        </h4>
-        <a href="{% url 'login' %}" class="btn-glass-outline btn-sm py-2 px-4">Connexion</a>
-    </div>
-</nav>
+{% block title %}BloodConnect | Accueil{% endblock %}
 
+{% block content %}
 <section class="container d-flex align-items-center justify-content-center text-center" style="min-height: 80vh;">
     <div class="max-w-3xl">
         <h1 class="display-3 fw-bolder mb-3 text-gradient">Donnez du sang.<br><span class="text-gradient-red">Sauvez des vies.</span></h1>
         <p class="lead mb-5 opacity-75">Une plateforme intelligente pour connecter les donneurs et les hôpitaux en temps réel, grâce à la puissance du réseau.</p>
         
         <div class="d-flex justify-content-center gap-3 flex-wrap">
-            <a href="{% url 'register_donneur' %}" class="btn-glass-primary">Je suis donneur</a>
-            <a href="{% url 'register_hopital' %}" class="btn-glass-outline">Espace hôpital</a>
-        </div>
-    </div>
-</section>
-
-<section class="container py-5">
-    <div class="d-flex align-items-center mb-4">
-        <h2 class="mb-0 fw-bold">Demandes urgentes</h2>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="glass-panel p-4 h-100 position-relative" style="border-left: 4px solid #ef4444;">
-                <h4 class="fw-bold text-danger">O+ Requis</h4>
-                <p class="text-light opacity-75 mb-4">
-                    <i class="bi bi-geo-alt"></i> Tunis<br>
-                    <i class="bi bi-droplet"></i> 3 poches urgentes<br>
-                    <i class="bi bi-clock"></i> Il y a 2h
-                </p>
-                <button class="btn-glass-primary w-100 py-2">Répondre à l'appel</button>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="glass-panel p-4 h-100 position-relative" style="border-left: 4px solid #ef4444;">
-                <h4 class="fw-bold text-danger">A- Requis</h4>
-                <p class="text-light opacity-75 mb-4">
-                    <i class="bi bi-geo-alt"></i> Sfax<br>
-                    <i class="bi bi-droplet"></i> 2 poches urgentes<br>
-                    <i class="bi bi-clock"></i> Il y a 5h
-                </p>
-                <button class="btn-glass-primary w-100 py-2">Répondre à l'appel</button>
-            </div>
+            <a href="{% url 'register_donneur' %}" class="btn-glass-primary text-decoration-none">Je suis donneur</a>
+            <a href="{% url 'register_hopital' %}" class="btn-glass-outline text-decoration-none">Espace hôpital</a>
         </div>
     </div>
 </section>
@@ -108,10 +61,4 @@
         </div>
     </div>
 </section>
-
-<footer class="text-center p-4 border-top" style="border-color: rgba(255,255,255,0.05)!important;">
-    <p class="mb-0 opacity-50">© 2026 BloodConnect — Tous droits réservés.</p>
-</footer>
-
-</body>
-</html>
+{% endblock %}

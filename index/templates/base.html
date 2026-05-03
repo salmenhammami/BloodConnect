@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BloodConnect | Sauvez des vies{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-glass p-3">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="{% url 'index' %}" class="text-decoration-none">
+            <h4 class="mb-0 fw-bold text-white">
+                <span class="text-danger">🩸</span> BloodConnect
+            </h4>
+        </a>
+        <div>
+            {% if user.is_authenticated %}
+                {% if user.donneur %}
+                    <a href="{% url 'dashboard_donneur' %}" class="btn-glass-outline btn-sm py-2 px-4 me-2">Tableau de bord</a>
+                {% elif user.hopital %}
+                    <a href="{% url 'dashboard_hopital' %}" class="btn-glass-outline btn-sm py-2 px-4 me-2">Tableau de bord</a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="btn-glass-primary btn-sm py-2 px-4">Déconnexion</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn-glass-outline btn-sm py-2 px-4">Connexion</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<main style="min-height: 80vh;">
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer class="text-center p-4 border-top mt-auto" style="border-color: rgba(255,255,255,0.05)!important;">
+    <p class="mb-0 opacity-50">© 2026 BloodConnect — Tous droits réservés.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% if messages %}
+<div id="django-messages-container" style="display:none;">
+    {% for message in messages %}
+    <span class="django-message" data-message="{{ message }}" data-tags="{{ message.tags }}"></span>
+    {% endfor %}
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var messageElements = document.querySelectorAll('.django-message');
+        messageElements.forEach(function(el) {
+            var text = el.getAttribute('data-message');
+            var tags = el.getAttribute('data-tags');
+            var bgColor = "#3b82f6";
+            if (tags && tags.includes('success')) {
+                bgColor = "#10b981";
+            } else if (tags && tags.includes('error')) {
+                bgColor = "#ef4444";
+            }
+            
+            Toastify({
+                text: text,
+                duration: 4000,
+                close: true,
+                gravity: "top", 
+                position: "right",
+                backgroundColor: bgColor,
+            }).showToast();
+        });
+    });
+</script>
+{% endif %}
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

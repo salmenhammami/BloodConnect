@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -21,6 +22,24 @@ class Donneur(models.Model):
     date_naissance = models.DateField()
     ville = models.CharField(max_length=100)
     actif = models.BooleanField(default=True)
+    points = models.PositiveIntegerField(default=0)
+
+    @property
+    def niveau(self):
+        if self.points >= 1000: return "Sauveur d'Or"
+        if self.points >= 500: return "Héros d'Argent"
+        if self.points >= 100: return "Goutte de Bronze"
+        return "Nouveau Donneur"
+
+    def prochaine_date_don(self):
+        dernier_don = self.don_set.filter(valide=True).order_by('-date_don').first()
+        if not dernier_don:
+            return date.today()
+        delai = timedelta(days=56) if self.sexe == 'M' else timedelta(days=84)
+        return dernier_don.date_don + delai
+
+    def est_eligible(self):
+        return date.today() >= self.prochaine_date_don()
 
     def __str__(self):
         return f"Donneur: {self.user.get_full_name()} ({self.groupe_sanguin})"
@@ -33,6 +52,8 @@ class Hopital(models.Model):
     ville = models.CharField(max_length=100)
     agrement = models.CharField(max_length=100, unique=True)
     valide = models.BooleanField(default=False)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return f"Hôpital: {self.nom}"

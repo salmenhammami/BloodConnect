@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Connexion | BloodConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-md-5">
+        <div class="glass-panel p-5">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-white">Bienvenue</h2>
+                <p class="opacity-75">Connectez-vous pour accéder à votre espace.</p>
+            </div>
+
+            <form method="post" class="glass-form-container">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="username">Nom d'utilisateur</label>
+                    <input type="text" name="username" id="username" required>
+                </div>
+                <div class="mb-4">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" name="password" id="password" required>
+                </div>
+                <button type="submit" class="btn-glass-primary w-100 py-2">Se connecter</button>
+            </form>
+
+            <div class="text-center mt-4 pt-3 border-top" style="border-color: rgba(255,255,255,0.1)!important;">
+                <p class="opacity-75 mb-1">Pas encore de compte ?</p>
+                <div class="d-flex justify-content-center gap-2 mt-2">
+                    <a href="{% url 'register_donneur' %}" class="text-info text-decoration-none small">Je suis donneur</a>
+                    <span class="opacity-50">|</span>
+                    <a href="{% url 'register_hopital' %}" class="text-info text-decoration-none small">Je représente un hôpital</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

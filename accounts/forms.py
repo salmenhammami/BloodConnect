@@ -10,6 +10,9 @@ class DonneurRegisterForm(forms.ModelForm):
     class Meta:
         model = Donneur
         fields = ["groupe_sanguin", "sexe", "date_naissance", "ville"]
+        widgets = {
+            "date_naissance": forms.DateInput(attrs={"type": "date"}),
+        }
 
     def save(self):
         user = User.objects.create_user(

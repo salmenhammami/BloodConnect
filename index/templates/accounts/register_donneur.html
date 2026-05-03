@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Inscription Donneur | BloodConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center align-items-center">
+    <div class="col-md-6">
+        <div class="glass-panel p-5">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-white">Devenir Donneur</h2>
+                <p class="opacity-75">Rejoignez la communauté des héros du quotidien.</p>
+            </div>
+
+            <form method="post" class="glass-form-container">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="opacity-50">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn-glass-primary w-100 py-2 mt-3">S'inscrire</button>
+            </form>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'login' %}" class="text-info text-decoration-none small">Déjà un compte ? Se connecter</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
