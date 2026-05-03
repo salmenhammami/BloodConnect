@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Admin | BloodConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">Espace Administrateur</h2>
+        <span class="badge bg-danger ms-3 px-3 py-2 rounded-pill">SuperAdmin</span>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
+                <h5 class="text-uppercase opacity-75 mb-3">Donneurs inscrits</h5>
+                <div class="display-3 fw-bolder text-info mb-2">{{ donneurs.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 text-center" style="border-top: 4px solid #10b981;">
+                <h5 class="text-uppercase opacity-75 mb-3">Hôpitaux partenaires</h5>
+                <div class="display-3 fw-bolder text-success mb-2">{{ hopitaux.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 text-center" style="border-top: 4px solid #ef4444;">
+                <h5 class="text-uppercase opacity-75 mb-3">Urgences actives</h5>
+                <div class="display-3 fw-bolder text-danger mb-2">{{ demandes.count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="fw-bold mb-4">Gestion des Hôpitaux</h3>
+    <div class="glass-panel p-0 overflow-hidden">
+        <table class="table table-dark table-hover mb-0" style="background: transparent;">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Ville</th>
+                    <th>Agrément</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hopital in hopitaux %}
+                <tr>
+                    <td class="align-middle">{{ hopital.nom }}</td>
+                    <td class="align-middle">{{ hopital.ville }}</td>
+                    <td class="align-middle">{{ hopital.agrement }}</td>
+                    <td class="align-middle">
+                        {% if hopital.valide %}
+                        <span class="badge bg-success">Validé</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">En attente</span>
+                        {% endif %}
+                    </td>
+                    <td class="align-middle">
+                        {% if not hopital.valide %}
+                        <form method="post" action="{% url 'dashboard_admin' %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="hopital_id" value="{{ hopital.id }}">
+                            <input type="hidden" name="action" value="valider">
+                            <button type="submit" class="btn btn-sm btn-outline-success">Valider</button>
+                        </form>
+                        {% else %}
+                        <span class="small">Aucune action</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center opacity-50 py-4">Aucun hôpital inscrit.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

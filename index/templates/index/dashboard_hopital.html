@@ -1,0 +1,118 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Espace Hôpital | BloodConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .border-left-danger { border-left: 4px solid #ef4444 !important; }
+    .border-left-secondary { border-left: 4px solid #6b7280 !important; }
+    .disabled-link { pointer-events: none; opacity: 0.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-0 fw-bold">{{ hopital.nom }}</h2>
+            <p class="text-info mb-0"><i class="bi bi-geo-alt"></i> {{ hopital.ville }} | Agrément: {{ hopital.agrement }}</p>
+        </div>
+        <div>
+            {% if not hopital.valide %}
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Compte en attente de validation</span>
+            {% else %}
+            <span class="badge bg-success px-3 py-2 rounded-pill">Compte Vérifié</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-8">
+            <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold mb-4">Statistiques d'Activité</h5>
+                <canvas id="activityChart" height="100"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 d-flex flex-column justify-content-center text-center">
+                <div class="display-3 fw-bolder text-danger mb-2">{{ demandes.count }}</div>
+                <h5 class="opacity-75">Demandes Urgentes</h5>
+                <hr style="border-color: rgba(255,255,255,0.1);">
+                <div class="display-3 fw-bolder text-info mb-2">{{ campagnes.count }}</div>
+                <h5 class="opacity-75">Campagnes créées</h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Nos Demandes Urgentes</h3>
+        <a href="{% url 'create_demande' %}" class="btn-glass-primary text-decoration-none {% if not hopital.valide %}disabled-link{% endif %}">+ Nouvelle Demande</a>
+    </div>
+
+    <div class="row g-4">
+        {% for demande in demandes %}
+        <div class="col-md-4">
+            <div class="glass-panel p-4 {% if demande.statut == 'Active' %}border-left-danger{% else %}border-left-secondary{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="fw-bold text-danger">{{ demande.groupe_sanguin }} Requis</h5>
+                    <span class="badge {% if demande.statut == 'Active' %}bg-danger{% else %}bg-secondary{% endif %}">{{ demande.statut }}</span>
+                </div>
+                <p class="mb-1"><i class="bi bi-droplet text-danger"></i> {{ demande.quantite }} poches</p>
+                <p class="mb-3 opacity-75"><i class="bi bi-clock"></i> Délai: {{ demande.delai|date:"d M Y H:i" }}</p>
+                <a href="#" class="btn-glass-outline btn-sm w-100 mt-2">Voir les réponses ({{ demande.reponseappel_set.count }})</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="glass-panel p-4 text-center">
+                <p class="opacity-50 mb-0">Vous n'avez aucune demande en cours.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var ctx = document.getElementById('activityChart').getContext('2d');
+        var activityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                datasets: [{
+                    label: 'Réponses aux appels',
+                    data: [12, 19, 15, 25, 22, 30],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { color: 'rgba(255, 255, 255, 0.7)' }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: 'rgba(255, 255, 255, 0.7)' }
+                    },
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: 'rgba(255, 255, 255, 0.7)' }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+

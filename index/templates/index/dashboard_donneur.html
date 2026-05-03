@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Espace Donneur | BloodConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .border-top-success { border-top: 4px solid #10b981 !important; }
+    .border-top-danger { border-top: 4px solid #ef4444 !important; }
+    .disabled-btn { opacity: 0.5; cursor: not-allowed; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">Bonjour, {{ user.first_name|default:user.username }}</h2>
+        <span class="badge bg-danger ms-3 px-3 py-2 rounded-pill">{{ donneur.groupe_sanguin }}</span>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Gamification Card -->
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 text-center" style="border-top: 4px solid #eab308;">
+                <h5 class="text-uppercase opacity-75 mb-3">Mon Niveau</h5>
+                <div class="display-1 mb-2">
+                    {% if "Or" in niveau %}🥇{% elif "Argent" in niveau %}🥈{% elif "Bronze" in niveau %}🥉{% else %}🩸{% endif %}
+                </div>
+                <h4 class="fw-bold text-warning">{{ niveau }}</h4>
+                <p class="mb-0 opacity-75">{{ points }} points de contribution</p>
+            </div>
+        </div>
+
+        <!-- Eligibility Card -->
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 text-center {% if est_eligible %}border-top-success{% else %}border-top-danger{% endif %}">
+                <h5 class="text-uppercase opacity-75 mb-3">Éligibilité</h5>
+                {% if est_eligible %}
+                    <div class="display-1 mb-2">✅</div>
+                    <h4 class="fw-bold text-success">Vous êtes éligible !</h4>
+                    <p class="mb-0 opacity-75">Vous pouvez faire un don dès aujourd'hui.</p>
+                {% else %}
+                    <div class="display-1 mb-2">⏳</div>
+                    <h4 class="fw-bold text-danger">Patience...</h4>
+                    <p class="mb-0 opacity-75">Prochain don possible le : <br><strong>{{ prochaine_date|date:"d M Y" }}</strong></p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
+                <h5 class="text-uppercase opacity-75 mb-3">Historique</h5>
+                <div class="display-4 fw-bolder text-info my-3">{{ donneur.don_set.count }}</div>
+                <h4 class="fw-bold">Dons réalisés</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Urgences compatibles ({{ demandes.count }})</h3>
+        <a href="{% url 'list_campagnes' %}" class="btn-glass-outline btn-sm">Voir les campagnes de collecte</a>
+    </div>
+    <div class="row g-4">
+        {% for demande in demandes %}
+        <div class="col-md-6">
+            <div class="glass-panel p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="fw-bold text-danger">{{ demande.groupe_sanguin }} Requis</h5>
+                    <span class="badge bg-danger">{{ demande.quantite }} poches</span>
+                </div>
+                <p class="mb-1"><i class="bi bi-hospital text-info"></i> {{ demande.hopital.nom }}</p>
+                <p class="mb-3 opacity-75"><i class="bi bi-geo-alt"></i> {{ demande.hopital.ville }}</p>
+                <p class="small opacity-75">{{ demande.description|truncatechars:100 }}</p>
+                
+                <form method="post" action="{% url 'repondre_demande' demande.id %}">
+                    {% csrf_token %}
+                    {% if demande.id in reponses_donneur %}
+                        <button type="button" class="btn-glass-primary w-100 mt-2 disabled-btn" disabled>
+                            Déjà répondu ✅
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn-glass-primary w-100 mt-2 {% if not est_eligible %}disabled-btn{% endif %}" {% if not est_eligible %}disabled{% endif %}>
+                            Je réponds à l'appel
+                        </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="glass-panel p-5 text-center">
+                <h5 class="opacity-50">Aucune urgence signalée pour le moment.</h5>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Carte Interactive -->
+    <h3 class="fw-bold mt-5 mb-4">Carte des Urgences</h3>
+    <div class="glass-panel p-2 mb-5">
+        <div id="urgencyMap" style="height: 400px; border-radius: 20px; z-index: 1;"></div>
+    </div>
+    
+    <div id="urgences-data" style="display: none;">
+        {% for demande in demandes %}
+        <div class="urgence-item" 
+             data-ville="{{ demande.hopital.ville }}" 
+             data-hopital="{{ demande.hopital.nom }}" 
+             data-groupe="{{ demande.groupe_sanguin }}" 
+             data-quantite="{{ demande.quantite }}">
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initialiser la carte centrée sur la Tunisie
+        var map = L.map('urgencyMap').setView([33.8869, 9.5375], 6);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        var urgences = [];
+        var urgenceElements = document.querySelectorAll('.urgence-item');
+        urgenceElements.forEach(function(el) {
+            urgences.push({
+                ville: el.getAttribute('data-ville'),
+                hopital: el.getAttribute('data-hopital'),
+                groupe: el.getAttribute('data-groupe'),
+                quantite: parseInt(el.getAttribute('data-quantite'), 10)
+            });
+        });
+
+        // Coordonnées approximatives des villes tunisiennes pour la démo
+        var coords = {
+            "Tunis": [36.8065, 10.1815],
+            "Sfax": [34.7406, 10.7603],
+            "Sousse": [35.8254, 10.6369],
+            "Bizerte": [37.2744, 9.8739],
+            "Gabes": [33.8815, 10.0982],
+            "Ariana": [36.8625, 10.1956]
+        };
+
+        urgences.forEach(function(urg) {
+            var loc = coords[urg.ville] || [36.8, 10.1]; // Default to Tunis area if unknown
+            // Ajouter un peu d'aléatoire pour éviter la superposition exacte
+            var lat = loc[0] + (Math.random() - 0.5) * 0.05;
+            var lng = loc[1] + (Math.random() - 0.5) * 0.05;
+
+            var marker = L.marker([lat, lng]).addTo(map);
+            marker.bindPopup(`<b>${urg.hopital}</b><br>Besoin urgent: <span class="text-danger fw-bold">${urg.groupe}</span> (${urg.quantite} poches)`);
+        });
+    });
+</script>
+{% endblock %}
+
