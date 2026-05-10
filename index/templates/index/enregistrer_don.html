@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Enregistrer un Don | BloodConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center">
+    <div class="col-md-6">
+        <div class="glass-panel p-5" style="border-top: 4px solid #10b981;">
+            <div class="mb-4">
+                <a href="{% url 'dashboard_donneur' %}" class="text-decoration-none text-info small">
+                    <i class="bi bi-arrow-left"></i> Retour au tableau de bord
+                </a>
+                <h3 class="fw-bold text-white mt-3"><i class="bi bi-heart-pulse text-danger"></i> Enregistrer un don</h3>
+                <p class="opacity-75">Enregistrez un don effectué pour mettre à jour votre historique.</p>
+            </div>
+
+            <form method="post" class="glass-form-container">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label>Date du don</label>
+                    <input type="date" name="date_don" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Établissement hospitalier</label>
+                    <select name="hopital_id">
+                        <option value="">— Choisir un établissement —</option>
+                        {% for hopital in hopitaux %}
+                        <option value="{{ hopital.id }}">{{ hopital.nom }} ({{ hopital.ville }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Notes (optionnel)</label>
+                    <textarea name="notes" rows="3" placeholder="Observations..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-glass-primary w-100 py-2 mt-3" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <i class="bi bi-check-lg"></i> Enregistrer le don (+100 pts)
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

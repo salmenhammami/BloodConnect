@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Profil | BloodConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center">
+    <div class="col-md-6">
+        <div class="glass-panel p-5" style="border-top: 4px solid #3b82f6;">
+            <div class="mb-4">
+                <a href="{% url 'dashboard_donneur' %}" class="text-decoration-none text-info small">
+                    <i class="bi bi-arrow-left"></i> Retour au tableau de bord
+                </a>
+                <h3 class="fw-bold text-white mt-3">Modifier mon profil</h3>
+                <p class="opacity-75">Mettez à jour vos informations personnelles et médicales.</p>
+            </div>
+
+            <form method="post" class="glass-form-container">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label>Prénom</label>
+                    <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="Votre prénom">
+                </div>
+                <div class="mb-3">
+                    <label>Nom</label>
+                    <input type="text" name="last_name" value="{{ user.last_name }}" placeholder="Votre nom">
+                </div>
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ user.email }}" placeholder="email@exemple.com">
+                </div>
+
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn-glass-primary w-100 py-2 mt-3">
+                    <i class="bi bi-check-lg"></i> Enregistrer les modifications
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
