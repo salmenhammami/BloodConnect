@@ -103,7 +103,6 @@
                 <p class="mb-1"><i class="bi bi-hospital text-info"></i> {{ demande.hopital.nom }}</p>
                 <p class="mb-3 opacity-75"><i class="bi bi-geo-alt"></i> {{ demande.hopital.ville }}</p>
                 <p class="small opacity-75">{{ demande.description|truncatechars:100 }}</p>
-
                 <form method="post" action="{% url 'repondre_demande' demande.id %}">
                     {% csrf_token %}
                     {% if demande.id in reponses_donneur %}
