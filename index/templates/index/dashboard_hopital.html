@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Espace Hôpital | BloodConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .border-left-danger { border-left: 4px solid #ef4444 !important; }
+    .border-left-secondary { border-left: 4px solid #6b7280 !important; }
+    .disabled-link { pointer-events: none; opacity: 0.5; }
+    .modal-glass { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.1); }
+    .modal-glass .modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .modal-glass .modal-footer { border-top: 1px solid rgba(255,255,255,0.1); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-0 fw-bold">{{ hopital.nom }}</h2>
+            <p class="text-info mb-0"><i class="bi bi-geo-alt"></i> {{ hopital.ville }} | Agrément: {{ hopital.agrement }}</p>
+        </div>
+        <div>
+            {% if not hopital.valide %}
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Compte en attente de validation</span>
+            {% else %}
+            <span class="badge bg-success px-3 py-2 rounded-pill">Compte Vérifié</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-8">
+            <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold mb-4">Statistiques d'Activité</h5>
+                <canvas id="activityChart" height="100"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 d-flex flex-column justify-content-center text-center">
+                <div class="display-3 fw-bolder text-danger mb-2">{{ demandes_actives.count }}</div>
+                <h5 class="opacity-75">Demandes Actives</h5>
+                <hr style="border-color: rgba(255,255,255,0.1);">
+                <div class="display-3 fw-bolder text-info mb-2">{{ campagnes.count }}</div>
+                <h5 class="opacity-75">Campagnes créées</h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Demandes Urgentes Actives</h3>
+        <div>
+            <a href="{% url 'create_campagne' %}" class="btn-glass-outline text-decoration-none me-2 {% if not hopital.valide %}disabled-link{% endif %}">
+                <i class="bi bi-megaphone"></i> Nouvelle Campagne
+            </a>
+            <a href="{% url 'create_demande' %}" class="btn-glass-primary text-decoration-none {% if not hopital.valide %}disabled-link{% endif %}">
+                <i class="bi bi-plus-circle"></i> Nouvelle Demande
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        {% for demande in demandes_actives %}
+        <div class="col-md-4">
+            <div class="glass-panel p-4 border-left-danger">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="fw-bold text-danger">{{ demande.groupe_sanguin }} Requis</h5>
+                    <span class="badge bg-danger">Active</span>
+                </div>
+                <p class="mb-1"><i class="bi bi-droplet text-danger"></i> {{ demande.quantite }} poches</p>
+                <p class="mb-3 opacity-75"><i class="bi bi-clock"></i> Délai: {{ demande.delai|date:"d M Y H:i" }}</p>
+
+                <button type="button" class="btn-glass-outline btn-sm w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modal-{{ demande.id }}">
+                    <i class="bi bi-people"></i> Voir les réponses ({{ demande.reponseappel_set.count }})
+                </button>
+
+                <div class="d-flex gap-2">
+                    <a href="{% url 'edit_demande' demande.id %}" class="btn-glass-outline btn-sm flex-fill text-center text-decoration-none">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </a>
+                    <a href="{% url 'close_demande' demande.id %}" class="btn btn-sm btn-outline-secondary flex-fill"
+                       onclick="return confirm('Clôturer cette demande ?');">
+                        <i class="bi bi-x-circle"></i> Clôturer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-{{ demande.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-glass text-white">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-people-fill text-info"></i> Réponses — {{ demande.groupe_sanguin }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% for reponse in demande.reponseappel_set.all %}
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
+                            <div>
+                                <strong>{{ reponse.donneur.user.get_full_name|default:reponse.donneur.user.username }}</strong>
+                                <span class="badge bg-danger ms-2">{{ reponse.donneur.groupe_sanguin }}</span>
+                                <br>
+                                <small class="opacity-75">
+                                    {% if "Or" in reponse.donneur.niveau %}🥇{% elif "Argent" in reponse.donneur.niveau %}🥈{% elif "Bronze" in reponse.donneur.niveau %}🥉{% else %}🩸{% endif %}
+                                    {{ reponse.donneur.niveau }} · {{ reponse.donneur.ville }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <small class="opacity-50">{{ reponse.date_reponse|date:"d/m/Y H:i" }}</small><br>
+                                <span class="badge bg-info">{{ reponse.statut }}</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-center opacity-50 my-3">Aucune réponse reçue pour le moment.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="glass-panel p-4 text-center">
+                <p class="opacity-50 mb-0">Vous n'avez aucune demande active.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if demandes_cloturees %}
+    <h3 class="fw-bold mb-4">Historique des demandes clôturées</h3>
+    <div class="glass-panel p-0 overflow-hidden mb-5">
+        <table class="table table-dark table-hover mb-0" style="background: transparent;">
+            <thead>
+                <tr>
+                    <th>Groupe</th>
+                    <th>Quantité</th>
+                    <th>Délai</th>
+                    <th>Réponses</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for demande in demandes_cloturees %}
+                <tr>
+                    <td><span class="badge bg-secondary">{{ demande.groupe_sanguin }}</span></td>
+                    <td>{{ demande.quantite }} poches</td>
+                    <td>{{ demande.delai|date:"d/m/Y" }}</td>
+                    <td>{{ demande.reponseappel_set.count }}</td>
+                    <td><span class="badge bg-secondary">Clôturée</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var ctx = document.getElementById('activityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                datasets: [{
+                    label: 'Réponses aux appels',
+                    data: [12, 19, 15, 25, 22, 30],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { color: 'rgba(255, 255, 255, 0.7)' }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: 'rgba(255, 255, 255, 0.7)' }
+                    },
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: 'rgba(255, 255, 255, 0.7)' }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

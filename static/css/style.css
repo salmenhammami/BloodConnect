@@ -2,7 +2,6 @@
 
 body {
     background: #0f172a;
-    /* Arrière-plan premium avec des "orbes" de couleur floutées intégrées dans le gradient */
     background-image:
         radial-gradient(circle at 15% 50%, rgba(239, 68, 68, 0.15), transparent 25%),
         radial-gradient(circle at 85% 30%, rgba(37, 99, 235, 0.15), transparent 25%);
@@ -14,7 +13,6 @@ body {
     overflow-x: hidden;
 }
 
-/* === EFFET GLASSMORPHISM PREMIUM === */
 .glass-panel {
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(16px) saturate(180%);
@@ -30,7 +28,6 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* === NAVBAR === */
 .navbar-glass {
     background: rgba(15, 23, 42, 0.5);
     backdrop-filter: blur(20px);
@@ -40,7 +37,6 @@ body {
     z-index: 1000;
 }
 
-/* === BOUTONS PREMIUM === */
 .btn-glass-primary {
     background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
     color: white;
@@ -74,8 +70,6 @@ body {
     color: white;
 }
 
-/* === FORMULAIRES & INPUTS DJANGO === */
-/* Cible automatiquement les inputs générés par Django */
 .glass-form-container input,
 .glass-form-container select,
 .glass-form-container textarea {
@@ -105,23 +99,18 @@ body {
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* Utilitaires typographiques */
 .text-gradient {
     background: linear-gradient(to right, #f8fafc, #94a3b8);
     -webkit-background-clip: text;
     background-clip: text;
-    /* Ligne ajoutée pour corriger l'avertissement */
     -webkit-text-fill-color: transparent;
     color: transparent;
-    /* Bonne pratique supplémentaire */
 }
 
 .text-gradient-red {
     background: linear-gradient(to right, #ef4444, #fca5a5);
     -webkit-background-clip: text;
     background-clip: text;
-    /* Ligne ajoutée pour corriger l'avertissement */
     -webkit-text-fill-color: transparent;
     color: transparent;
-    /* Bonne pratique supplémentaire */
 }

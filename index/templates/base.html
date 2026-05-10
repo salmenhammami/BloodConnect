@@ -23,7 +23,10 @@
         </a>
         <div>
             {% if user.is_authenticated %}
-                {% if user.donneur %}
+                {% if user.is_superuser or user.is_staff %}
+                    <a href="{% url 'dashboard_admin' %}" class="btn-glass-outline btn-sm py-2 px-4 me-2">Dashboard</a>
+                    <a href="/admin/" class="btn-glass-primary btn-sm py-2 px-4 me-2">Admin</a>
+                {% elif user.donneur %}
                     <a href="{% url 'dashboard_donneur' %}" class="btn-glass-outline btn-sm py-2 px-4 me-2">Tableau de bord</a>
                 {% elif user.hopital %}
                     <a href="{% url 'dashboard_hopital' %}" class="btn-glass-outline btn-sm py-2 px-4 me-2">Tableau de bord</a>
@@ -67,13 +70,14 @@
                 bgColor = "#10b981";
             } else if (tags && tags.includes('error')) {
                 bgColor = "#ef4444";
+            } else if (tags && tags.includes('warning')) {
+                bgColor = "#eab308";
             }
-            
             Toastify({
                 text: text,
                 duration: 4000,
                 close: true,
-                gravity: "top", 
+                gravity: "top",
                 position: "right",
                 backgroundColor: bgColor,
             }).showToast();

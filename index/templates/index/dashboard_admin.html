@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Admin | BloodConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <h2 class="mb-0 fw-bold">Espace Administrateur</h2>
+            <span class="badge bg-danger ms-3 px-3 py-2 rounded-pill">SuperAdmin</span>
+        </div>
+        <a href="{% url 'export_donneurs_csv' %}" class="btn-glass-outline btn-sm">
+            <i class="bi bi-download"></i> Export CSV Donneurs
+        </a>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="glass-panel p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
+                <h5 class="text-uppercase opacity-75 mb-3">Donneurs inscrits</h5>
+                <div class="display-3 fw-bolder text-info mb-2">{{ donneurs.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 h-100 text-center" style="border-top: 4px solid #10b981;">
+                <h5 class="text-uppercase opacity-75 mb-3">Hôpitaux</h5>
+                <div class="display-3 fw-bolder text-success mb-2">{{ hopitaux.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 h-100 text-center" style="border-top: 4px solid #ef4444;">
+                <h5 class="text-uppercase opacity-75 mb-3">Urgences actives</h5>
+                <div class="display-3 fw-bolder text-danger mb-2">{{ demandes_actives.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 h-100 text-center" style="border-top: 4px solid #eab308;">
+                <h5 class="text-uppercase opacity-75 mb-3">Dons validés</h5>
+                <div class="display-3 fw-bolder text-warning mb-2">{{ total_dons }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold mb-4"><i class="bi bi-bar-chart"></i> Groupes</h5>
+                <canvas id="groupeChart" height="250"></canvas>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold mb-4"><i class="bi bi-geo-alt"></i> Carte des urgences</h5>
+                <div id="adminMap" style="height: 350px; border-radius: 16px; z-index: 1;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stats-data" style="display: none;">
+        {% for stat in stats_groupes %}
+        <div class="stat-item" data-groupe="{{ stat.groupe_sanguin }}" data-total="{{ stat.total }}"></div>
+        {% endfor %}
+    </div>
+
+    <div id="demandes-map-data" style="display: none;">
+        {% for demande in demandes_actives %}
+        <div class="demande-map-item"
+             data-ville="{{ demande.hopital.ville }}"
+             data-hopital="{{ demande.hopital.nom }}"
+             data-groupe="{{ demande.groupe_sanguin }}"
+             data-quantite="{{ demande.quantite }}">
+        </div>
+        {% endfor %}
+    </div>
+
+    <h3 class="fw-bold mb-4">Gestion des Hôpitaux</h3>
+    <div class="glass-panel p-0 overflow-hidden mb-5">
+        <table class="table table-dark table-hover mb-0" style="background: transparent;">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Ville</th>
+                    <th>Agrément</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hopital in hopitaux %}
+                <tr>
+                    <td class="align-middle">{{ hopital.nom }}</td>
+                    <td class="align-middle">{{ hopital.ville }}</td>
+                    <td class="align-middle"><code>{{ hopital.agrement }}</code></td>
+                    <td class="align-middle">
+                        {% if hopital.valide %}
+                            <span class="badge bg-success">Validé</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">En attente</span>
+                        {% endif %}
+                    </td>
+                    <td class="align-middle">
+                        {% if not hopital.valide %}
+                        <form method="post" action="{% url 'dashboard_admin' %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="hopital_id" value="{{ hopital.id }}">
+                            <input type="hidden" name="action" value="valider">
+                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-check-lg"></i> Valider
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="small opacity-50">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center opacity-50 py-4">Aucun hôpital inscrit.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="fw-bold mb-4">Liste des Donneurs</h3>
+    <div class="glass-panel p-0 overflow-hidden">
+        <table class="table table-dark table-hover mb-0" style="background: transparent;">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Groupe</th>
+                    <th>Ville</th>
+                    <th>Points</th>
+                    <th>Niveau</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for donneur in donneurs %}
+                <tr>
+                    <td class="align-middle">{{ donneur.user.username }}</td>
+                    <td class="align-middle"><span class="badge bg-danger">{{ donneur.groupe_sanguin }}</span></td>
+                    <td class="align-middle">{{ donneur.ville }}</td>
+                    <td class="align-middle">{{ donneur.points }}</td>
+                    <td class="align-middle">
+                        {% if "Or" in donneur.niveau %}🥇{% elif "Argent" in donneur.niveau %}🥈{% elif "Bronze" in donneur.niveau %}🥉{% else %}🩸{% endif %}
+                        {{ donneur.niveau }}
+                    </td>
+                    <td class="align-middle">
+                        {% if donneur.actif %}
+                            <span class="badge bg-success">Actif</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactif</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center opacity-50 py-4">Aucun donneur inscrit.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var statItems = document.querySelectorAll('.stat-item');
+    var labels = [];
+    var data = [];
+    var colors = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#06b6d4'];
+    statItems.forEach(function(el, i) {
+        labels.push(el.getAttribute('data-groupe'));
+        data.push(parseInt(el.getAttribute('data-total'), 10));
+    });
+
+    if (labels.length > 0) {
+        var ctx = document.getElementById('groupeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: 'rgba(255,255,255,0.7)', padding: 15 }
+                    }
+                }
+            }
+        });
+    }
+
+    var map = L.map('adminMap').setView([34.5, 9.5], 6);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(map);
+
+    var coords = {
+        "Tunis": [36.8065, 10.1815], "Sfax": [34.7406, 10.7603],
+        "Sousse": [35.8254, 10.6369], "Bizerte": [37.2744, 9.8739],
+        "Gabes": [33.8815, 10.0982], "Ariana": [36.8625, 10.1956],
+        "Monastir": [35.7643, 10.8113], "Kairouan": [35.6781, 10.0963]
+    };
+
+    var mapItems = document.querySelectorAll('.demande-map-item');
+    mapItems.forEach(function(el) {
+        var ville = el.getAttribute('data-ville');
+        var loc = coords[ville] || [36.8, 10.1];
+        var lat = loc[0] + (Math.random() - 0.5) * 0.03;
+        var lng = loc[1] + (Math.random() - 0.5) * 0.03;
+        L.circleMarker([lat, lng], {
+            radius: 8, fillColor: '#ef4444', color: '#fff', weight: 1, fillOpacity: 0.8
+        }).addTo(map).bindPopup(
+            '<b>' + el.getAttribute('data-hopital') + '</b><br>' +
+            el.getAttribute('data-groupe') + ' — ' + el.getAttribute('data-quantite') + ' poches'
+        );
+    });
+});
+</script>
+{% endblock %}
