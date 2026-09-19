@@ -1,45 +1,49 @@
 # BloodConnect
 
-A web platform designed to connect voluntary blood donors with urgent hospital requests and community donation campaigns.
+A platform where hospitals post urgent blood requests and volunteer donors answer them.
 
-## Overview
+The interesting part wasn't the CRUD — it was the rules. You can't donate whenever you
+feel like it, so the app works out when each donor is next eligible and won't let them
+respond before then. The interface is in French.
 
-**BloodConnect** bridges the gap between donors and medical institutions to facilitate life-saving blood requests. It provides a centralized, easy-to-use platform for broadcasting urgent needs based on blood type and location, organizing donation drives, and keeping donors informed when help is needed most.
+## What it does
 
-## Key Features
+- A hospital posts what it needs: blood group, number of bags, deadline
+- Eligible donors see it and respond; the hospital confirms
+- Each donor's next eligible date is calculated from their last validated donation —
+  56 days for men, 84 for women
+- Donors earn points and climb four tiers, from Nouveau Donneur to Sauveur d'Or
+- Hospitals schedule donation campaigns and donors book a time slot
+- Hospitals register with an accreditation number and stay inactive until an admin
+  approves them
 
-* **Urgent Request Matching:** Post and broadcast urgent blood requirements to compatible registered donors nearby.
-* **Donor & Hospital Dashboards:** Specialized portals for donors to manage their availability and for hospitals to manage active requests.
-* **Donation Drives & Campaigns:** Create, discover, and participate in local blood donation events and public awareness campaigns.
-* **Real-Time Alerts:** Notify registered donors when matching urgent blood requests are submitted in their area.
+Donors, hospitals and admins each get their own dashboard.
 
-## Tech Stack
+**Built with** Django, SQLite and Django templates.
 
-* **Backend:** Python & Django
-* **Frontend:** HTML5, CSS3, JavaScript / Tailwind CSS
-* **Database:** SQLite
-* **Authentication:** Django Authentication System (Role-Based Access)
-
-## Getting Started
-
-### Prerequisites
-* Python 3.10+
-* `pip` and `venv`
-
-### Quick Setup
+## Running it
 
 ```bash
-# Clone the repository
-git clone https://github.com/HammamiSalmen/BloodConnect.git
+git clone https://github.com/salmenhammami/BloodConnect.git
 cd BloodConnect
 
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# Run migrations & start development server
 python manage.py migrate
+python manage.py createsuperuser
 python manage.py runserver
+```
+
+New hospitals need approving before they can post anything — log into `/admin/` and
+tick their `valide` flag.
+
+## Honest notes
+
+A coursework project. Responses show up in the dashboards but nothing is emailed yet,
+matching is by city rather than by distance even though hospitals store coordinates,
+and the secret key and debug flag still live in `settings.py` where they shouldn't.
+
+---
+
+**Salmen Hammami** · [GitHub](https://github.com/salmenhammami) · [LinkedIn](https://www.linkedin.com/in/salmenhammami/)
